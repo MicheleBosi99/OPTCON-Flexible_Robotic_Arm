@@ -61,8 +61,8 @@ visu_animation = True
 tf = 10 # final time in seconds
 
 dt = dyn.dt   # get discretization step from dynamics
-ns = dyn.ns
-ni = dyn.ni
+ns = dyn.dim_x
+ni = dyn.dim_u
 
 TT = int(tf/dt) # discrete-time samples
 

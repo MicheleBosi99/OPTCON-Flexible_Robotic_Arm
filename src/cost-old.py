@@ -9,8 +9,8 @@ import numpy as np
 import control
 import dynamics as dyn
 
-ns = dyn.ns
-ni = dyn.ni
+ns = dyn.dim_x
+ni = dyn.dim_u
 
 # QQt = np.array([[10000, 0], [0, 100]])
 QQt = 0.1*np.diag([100.0, 1.0])

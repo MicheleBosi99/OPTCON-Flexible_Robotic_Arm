@@ -1,5 +1,7 @@
 import numpy as np
+import sys
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 # Constants
 DT = 1e-3
@@ -18,9 +20,9 @@ F1 = 0.1
 F2 = 0.1
 
 F = np.array([[F1, 0],
-              [ 0 ,F2]])
+              [0, F2]])
 
-Z_2x2 = np.zeros((2,2))
+Z_2x2 = np.zeros((2, 2))
 
 def compute_inertia_matrix(theta2):
     """Compute the inertia matrix M."""
@@ -29,16 +31,12 @@ def compute_inertia_matrix(theta2):
     m12 = I2 + M2 * R2**2 + M2 * L1 * R2 * cos_theta2
     m21 = m12
     m22 = I2 + M2 * R2**2
-    print(m11)
-    print(m12)
-    print(m21)
-    print(m22)
     return np.array([[m11, m12], [m21, m22]])
 
 def compute_coriolis(theta2, dtheta1, dtheta2):
     """Compute the Coriolis and centrifugal forces matrix C."""
     sin_theta2 = np.sin(theta2)
-    c1 = -M2 * L1 * R2 * dtheta2 * sin_theta2 * (dtheta2 + 2 * dtheta1)
+    c1 = -M2 * L1 * R2 * sin_theta2 * (dtheta2 + 2 * dtheta1) * dtheta2
     c2 = M2 * L1 * R2 * sin_theta2 * dtheta1**2
     return np.array([[c1], [c2]])
 
@@ -50,9 +48,7 @@ def compute_gravity(theta1, theta2):
     g2 = G * M2 * R2 * sin_theta1_theta2
     return np.array([[g1], [g2]])
 
-
 def dynamics(x, u):
-
     theta1 = x[0].item()
     theta2 = x[1].item()
     dtheta1 = x[2].item()
@@ -64,8 +60,8 @@ def dynamics(x, u):
     C = compute_coriolis(theta2, dtheta1, dtheta2)
     G = compute_gravity(theta1, theta2)
     
-    A = np.block([[ -M_inv @ F, Z_2x2 ], 
-                  [ np.eye(2), Z_2x2 ]])    
+    A = np.block([[-M_inv @ F, Z_2x2], 
+                  [np.eye(2), Z_2x2]])
     
     M_inv_ext = np.block([
         [M_inv, Z_2x2],
@@ -76,7 +72,7 @@ def dynamics(x, u):
     
     C_ext = np.block([
         [C],
-        [np.zeros((2, 1))]  # Ensure the zeros are in the same shape (2, 1)
+        [np.zeros((2, 1))]
     ])
     
     G_ext = np.block([
@@ -84,37 +80,17 @@ def dynamics(x, u):
         [np.zeros((2, 1))]
     ])
     
-    
-    # print("M:\n", M)
-    # print("M_inv:\n", M_inv)
-    # print("C:\n", C)
-    # print("F:\n", F)
-    # print("G:\n", G)
-    # print("A:\n", A)
-    # print("B:\n", B)
-    # print("C_ext:\n", C_ext)
-    # print("G_ext:\n", G_ext)
-    
-    # print("x:\n", x)
-    # print("u:\n", u)
-    
-    # dx = A @ x + B @ u - M_inv_ext @ C_ext - M_inv_ext @ G_ext
-    dx = A @ x + B @ u - M_inv_ext @ (C_ext + G_ext)
-    
-    # print("dx:\n", dx)
-    
-    x_new = x + DT * dx
-    
-    return x_new
+    dx = A @ x + B @ u - M_inv_ext @ C_ext - M_inv_ext @ G_ext
+    x_next = x + DT * dx
+    return x_next
 
-def plot_double_pendulum(theta1, theta2, l1=1.5, l2=1.5):
+def plot_double_pendulum(theta1, theta2, l1, l2):
     # Calculate the positions of the pendulum arms
     x1 = l1 * np.sin(theta1)
     y1 = -l1 * np.cos(theta1)
     x2 = x1 + l2 * np.sin(theta2)
     y2 = y1 - l2 * np.cos(theta2)
 
-    # Update the plot of the double pendulum
     plt.clf()
     plt.plot([0, x1], [0, y1], 'o-', lw=2)
     plt.plot([x1, x2], [y1, y2], 'o-', lw=2)
@@ -125,26 +101,21 @@ def plot_double_pendulum(theta1, theta2, l1=1.5, l2=1.5):
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.grid()
-    plt.show()
+
+def update(frame, x, u):
+    global state
+    state = dynamics(state, u)
+    plot_double_pendulum(state[0].item(), state[1].item(), L1, L2)
 
 def main():
-    """Main function to simulate the dynamics."""
+    global state
     # Initial state and input
-    x = np.array([[3], [1.5], [1], [1]])  # Column vector for [theta1, theta2, dtheta1, dtheta2]
+    state = np.array([[3.14], [0], [1], [0]])  # Column vector for [theta1, theta2, dtheta1, dtheta2]
     u = np.array([[0], [0], [0], [0]])  # Column vector for [tau1, tau2]
 
-    
-    # print("x:\n", x)
-    # print("u:\n", u)
-    
-    iteration = 0
-    while True:
-        x = dynamics(x, u)
-        print("x:\n", x)
-        if iteration % 10 == 0:
-            plot_double_pendulum(x[0].item(), x[1].item())
-        iteration += 1
-    
-    
+    fig = plt.figure()
+    ani = animation.FuncAnimation(fig, update, fargs=(state, u), interval=20, cache_frame_data=False)
+    plt.show()
+
 if __name__ == "__main__":
     main()
