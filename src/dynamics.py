@@ -1,9 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Constants
-dt = 1e-3
-
 # Dynamics parameters
 M1 = 2
 M2 = 2
@@ -29,10 +26,6 @@ def compute_inertia_matrix(theta2):
     m12 = I2 + M2 * R2**2 + M2 * L1 * R2 * cos_theta2
     m21 = m12
     m22 = I2 + M2 * R2**2
-    print(m11)
-    print(m12)
-    print(m21)
-    print(m22)
     return np.array([[m11, m12], [m21, m22]])
 
 def compute_coriolis(theta2, dtheta1, dtheta2):
@@ -51,12 +44,16 @@ def compute_gravity(theta1, theta2):
     return np.array([[g1], [g2]])
 
 
-def dynamics(x, u):
+def dynamics(x, u, dt=1e-3):
 
     theta1 = x[0].item()
+    #print("theta1:",theta1)
     theta2 = x[1].item()
+    #print("theta2:",theta2)
     dtheta1 = x[2].item()
+    #print("dtheta1:",dtheta1)
     dtheta2 = x[3].item()
+    #print("dtheta2:",dtheta2)
 
     # Compute matrices
     M = compute_inertia_matrix(theta2)
@@ -100,51 +97,11 @@ def dynamics(x, u):
     
     # x_dot = A @ x + B @ u - M_inv_ext @ C_ext - M_inv_ext @ G_ext
     x_dot = A @ x + B @ u - M_inv_ext @ (C_ext + G_ext)
-    
-    # print("x_dot:\n", x_dot)
+    # print("x1_dot:",x_dot[0])
+    # print("x2_dot:",x_dot[1])
+    # print("x3_dot:",x_dot[2])
+    # print("x4_dot:",x_dot[3])
     
     x_new = x + dt * x_dot
     
     return x_new
-
-def plot_double_pendulum(theta1, theta2, l1=1.5, l2=1.5):
-    # Calculate the positions of the pendulum arms
-    x1 = l1 * np.sin(theta1)
-    y1 = -l1 * np.cos(theta1)
-    x2 = x1 + l2 * np.sin(theta2)
-    y2 = y1 - l2 * np.cos(theta2)
-
-    # Update the plot of the double pendulum
-    plt.clf()
-    plt.plot([0, x1], [0, y1], 'o-', lw=2)
-    plt.plot([x1, x2], [y1, y2], 'o-', lw=2)
-    plt.xlim(-2, 2)
-    plt.ylim(-2, 2)
-    plt.gca().set_aspect('equal', adjustable='box')
-    plt.title('Double Pendulum')
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.grid()
-    plt.show()
-
-def main():
-    """Main function to simulate the dynamics."""
-    # Initial state and input
-    x = np.array([[3], [1.5], [1], [1]])  # Column vector for [theta1, theta2, dtheta1, dtheta2]
-    u = np.array([[0], [0], [0], [0]])  # Column vector for [tau1, tau2]
-
-    
-    # print("x:\n", x)
-    # print("u:\n", u)
-    
-    iteration = 0
-    while True:
-        x = dynamics(x, u)
-        print("x:\n", x)
-        if iteration % 10 == 0:
-            plot_double_pendulum(x[0].item(), x[1].item())
-        iteration += 1
-    
-    
-if __name__ == "__main__":
-    main()

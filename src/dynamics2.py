@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 # Constants
-dt = 1e-3
+dt = 1e-4
 
 # Dynamics parameters
 M1 = 2
@@ -80,7 +80,11 @@ def dynamics(x, u):
         [np.zeros((2, 1))]
     ])
     
-    x_dot = A @ x + B @ u - M_inv_ext @ C_ext - M_inv_ext @ G_ext
+    x_dot = A @ x + B @ u - M_inv_ext @ (C_ext + G_ext)
+    print("x1:",x_dot[0])
+    print("x2:",x_dot[1])
+    print("x3:",x_dot[2])
+    print("x4:",x_dot[3])
     x_next = x + dt * x_dot
     return x_next
 
@@ -110,7 +114,7 @@ def update(frame, x, u):
 def main():
     global state
     # Initial state and input
-    state = np.array([[3.14], [0], [1], [0]])  # Column vector for [theta1, theta2, dtheta1, dtheta2]
+    state = np.array([[3.14], [1.5], [0], [0]])  # Column vector for [theta1, theta2, dtheta1, dtheta2]
     u = np.array([[0], [0], [0], [0]])  # Column vector for [tau1, tau2]
 
     fig = plt.figure()
