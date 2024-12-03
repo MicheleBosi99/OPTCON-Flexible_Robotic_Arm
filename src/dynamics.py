@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Constants
-DT = 1e-3
+dt = 1e-3
 
 # Dynamics parameters
 M1 = 2
@@ -98,12 +98,12 @@ def dynamics(x, u):
     # print("x:\n", x)
     # print("u:\n", u)
     
-    # dx = A @ x + B @ u - M_inv_ext @ C_ext - M_inv_ext @ G_ext
-    dx = A @ x + B @ u - M_inv_ext @ (C_ext + G_ext)
+    # x_dot = A @ x + B @ u - M_inv_ext @ C_ext - M_inv_ext @ G_ext
+    x_dot = A @ x + B @ u - M_inv_ext @ (C_ext + G_ext)
     
-    # print("dx:\n", dx)
+    # print("x_dot:\n", x_dot)
     
-    x_new = x + DT * dx
+    x_new = x + dt * x_dot
     
     return x_new
 

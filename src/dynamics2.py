@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 # Constants
-DT = 1e-3
+dt = 1e-3
 
 # Dynamics parameters
 M1 = 2
@@ -80,8 +80,8 @@ def dynamics(x, u):
         [np.zeros((2, 1))]
     ])
     
-    dx = A @ x + B @ u - M_inv_ext @ C_ext - M_inv_ext @ G_ext
-    x_next = x + DT * dx
+    x_dot = A @ x + B @ u - M_inv_ext @ C_ext - M_inv_ext @ G_ext
+    x_next = x + dt * x_dot
     return x_next
 
 def plot_double_pendulum(theta1, theta2, l1, l2):
