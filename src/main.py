@@ -25,6 +25,7 @@ def main():
     x_history = [x_0]
 
     # Compute dynamics for each time step
+    print("Computing dynamics...")
     for i in range(1, time_intervals):
         x_history.append(dyn(x_history[i - 1], u_0, dt))
 

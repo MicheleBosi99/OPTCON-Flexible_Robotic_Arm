@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 
-def animation(x, L1, L2,FRAME_SKIP=20):
+def animation(x_history, L1, L2,FRAME_SKIP=20):
     """
     Create an animation of a double pendulum.
 
@@ -12,14 +12,14 @@ def animation(x, L1, L2,FRAME_SKIP=20):
         L1 (float): Length of the first pendulum rod.
         L2 (float): Length of the second pendulum rod.
     """
-    T = x.shape[0]
+    T = x_history.shape[0]
     data = np.zeros((T, 4))
 
     # Calculate positions of the pendulum
-    data[:, 0] = L1 * np.sin(x[:, 2])  # x1
-    data[:, 1] = -L1 * np.cos(x[:, 2])  # y1
-    data[:, 2] = data[:, 0] + L2 * np.sin(x[:, 3])  # x2
-    data[:, 3] = data[:, 1] - L2 * np.cos(x[:, 3])  # y2
+    data[:, 0] = L1 * np.sin(x_history[:, 2])  # x1
+    data[:, 1] = -L1 * np.cos(x_history[:, 2])  # y1
+    data[:, 2] = data[:, 0] + L2 * np.sin(x_history[:, 3])  # x2
+    data[:, 3] = data[:, 1] - L2 * np.cos(x_history[:, 3])  # y2
 
     # Reduce data for animation by skipping frames
     data = data[::FRAME_SKIP]

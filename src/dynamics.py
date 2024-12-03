@@ -60,9 +60,7 @@ def dynamics(x, u, dt=1e-3):
     M_inv = np.linalg.inv(M)
     C = compute_coriolis(theta2, dtheta1, dtheta2)
     G = compute_gravity(theta1, theta2)
-    
-    A = np.block([[ -M_inv @ F, Z_2x2 ], 
-                  [ np.eye(2), Z_2x2 ]])    
+       
     
     M_inv_ext = np.block([
         [M_inv, Z_2x2],
