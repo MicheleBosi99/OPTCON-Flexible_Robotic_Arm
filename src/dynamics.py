@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 # Dynamics parameters
 M1 = 2
@@ -43,23 +42,100 @@ def compute_gravity(theta1, theta2):
     g2 = G * M2 * R2 * sin_theta1_theta2
     return np.array([[g1], [g2]])
 
+# TODO: maybe it is not necessary to compute it
+def compute_jacobian(dtheta1, dtheta2, theta1, theta2, tau1):
+    sin_theta1=np.sin(theta1)
+    cos_theta1=np.cos(theta1)
+    sin_theta2=np.sin(theta2)
+    cos_theta2=np.cos(theta2)
+    sin_theta1_theta2=np.sin(theta1 + theta2)
+    cos_theta1_theta2=np.cos(theta1 + theta2)
+    j11=(-F1*(I2 + M2*R2**2) + 2*L1*M2*R2*dtheta1*(I2 + L1*M2*R2*cos_theta2 \
+        + M2*R2**2)*sin_theta2 + 2*L1*M2*R2*dtheta2*(I2 + M2*R2**2) \
+            *sin_theta2)/(I1*I2 + I1*M2*R2**2 + I2*L1**2*M2 + I2*M1*R1**2 \
+                + L1**2*M2**2*R2**2*sin_theta2**2 + M1*M2*R1**2*R2**2)     
+    j12=(F2*(I2 + L1*M2*R2*cos_theta2 + M2*R2**2) - (I2 + M2*R2**2) \
+        *(-L1*M2*R2*dtheta2*sin_theta2 - L1*M2*R2*(2*dtheta1 + dtheta2) \
+            *sin_theta2))/(I1*I2 + I1*M2*R2**2 + I2*L1**2*M2 + I2*M1*R1**2 \
+                + L1**2*M2**2*R2**2*sin_theta2**2 + M1*M2*R1**2*R2**2)
+    j13=(G*M2*R2*(I2 + L1*M2*R2*cos_theta2 + M2*R2**2)*cos_theta1_theta2\
+        - (I2 + M2*R2**2)*(G*M2*R2*cos_theta1_theta2 + G*(L1*M2 + M1*R1) \
+            *cos_theta1))/(I1*I2 + I1*M2*R2**2 + I2*L1**2*M2 + I2*M1*R1**2 \
+                + L1**2*M2**2*R2**2*sin_theta2**2 + M1*M2*R1**2*R2**2)
+    j14=-2*L1**2*M2**2*R2**2*(-F1*dtheta1*(I2 + M2*R2**2) + F2*dtheta2*(I2 \
+        + L1*M2*R2*cos_theta2 + M2*R2**2) + M2*R2*(G*sin_theta1_theta2 \
+            + L1*dtheta1**2*sin_theta2)*(I2 + L1*M2*R2*cos_theta2 + M2*R2**2) \
+                + tau1*(I2 + M2*R2**2) - (I2 + M2*R2**2)*(G*M2*R2*sin_theta1_theta2 \
+                    + G*(L1*M2 + M1*R1)*sin_theta1 - L1*M2*R2*dtheta2*(2*dtheta1 + dtheta2)\
+                        *sin_theta2))*sin_theta2*cos_theta2/(I1*I2 + I1*M2*R2**2 \
+                            + I2*L1**2*M2 + I2*M1*R1**2 + L1**2*M2**2*R2**2*sin_theta2**2 \
+                                + M1*M2*R1**2*R2**2)**2 + (-F2*L1*M2*R2*dtheta2*sin_theta2 \
+                                    - L1*M2**2*R2**2*(G*sin_theta1_theta2 + L1*dtheta1**2\
+                                        *sin_theta2)*sin_theta2 + M2*R2*(G*cos_theta1_theta2 \
+                                            + L1*dtheta1**2*cos_theta2)*(I2 \
+                                                + L1*M2*R2*cos_theta2 + M2*R2**2) - (I2 + M2*R2**2)\
+                                                    *(G*M2*R2*cos_theta1_theta2 - L1*M2*R2*dtheta2\
+                                                        *(2*dtheta1 + dtheta2)*cos_theta2))/(I1*I2 \
+                                                            + I1*M2*R2**2 + I2*L1**2*M2 + I2*M1*R1**2 \
+                                                                + L1**2*M2**2*R2**2*sin_theta2**2 \
+                                                                    + M1*M2*R1**2*R2**2)
+    j21=(F1*(I2 + L1*M2*R2*cos_theta2 + M2*R2**2) - 2*L1*M2*R2*dtheta1\
+        *(I1 + I2 + L1**2*M2 + 2*L1*M2*R2*cos_theta2 + M1*R1**2 + M2*R2**2)\
+            *sin_theta2 - 2*L1*M2*R2*dtheta2*(I2 + L1*M2*R2*cos_theta2\
+                + M2*R2**2)*sin_theta2)/(I1*I2 + I1*M2*R2**2 + I2*L1**2*M2\
+                    + I2*M1*R1**2 + L1**2*M2**2*R2**2*sin_theta2**2 + M1*M2*R1**2*R2**2)
+    j22=(-F2*(I1 + I2 + L1**2*M2 + 2*L1*M2*R2*cos_theta2 + M1*R1**2 + M2*R2**2)\
+        + (-L1*M2*R2*dtheta2*sin_theta2 - L1*M2*R2*(2*dtheta1 + dtheta2)*sin_theta2)\
+            *(I2 + L1*M2*R2*cos_theta2 + M2*R2**2))/(I1*I2 + I1*M2*R2**2 + I2*L1**2*M2\
+                + I2*M1*R1**2 + L1**2*M2**2*R2**2*sin_theta2**2 + M1*M2*R1**2*R2**2)
+    j23=(-G*M2*R2*(I1 + I2 + L1**2*M2 + 2*L1*M2*R2*cos_theta2 + M1*R1**2 + M2*R2**2)\
+        *cos_theta1_theta2 + (G*M2*R2*cos_theta1_theta2 + G*(L1*M2 + M1*R1)\
+            *cos_theta1)*(I2 + L1*M2*R2*cos_theta2 + M2*R2**2))/(I1*I2 + I1*M2*R2**2\
+                + I2*L1**2*M2 + I2*M1*R1**2 + L1**2*M2**2*R2**2*sin_theta2**2 + M1*M2*R1**2*R2**2)
+    j24=-2*L1**2*M2**2*R2**2*(F1*dtheta1*(I2 + L1*M2*R2*cos_theta2 + M2*R2**2)\
+        - F2*dtheta2*(I1 + I2 + L1**2*M2 + 2*L1*M2*R2*cos_theta2 + M1*R1**2 + \
+            M2*R2**2) - M2*R2*(G*sin_theta1_theta2 + L1*dtheta1**2*sin_theta2)\
+                *(I1 + I2 + L1**2*M2 + 2*L1*M2*R2*cos_theta2 + M1*R1**2 + M2*R2**2)\
+                    - tau1*(I2 + L1*M2*R2*cos_theta2 + M2*R2**2) + (I2 + L1*M2*R2*cos_theta2\
+                        + M2*R2**2)*(G*M2*R2*sin_theta1_theta2 + G*(L1*M2 + M1*R1)\
+                            *sin_theta1 - L1*M2*R2*dtheta2*(2*dtheta1 + dtheta2)*sin_theta2))\
+                                *sin_theta2*cos_theta2/(I1*I2 + I1*M2*R2**2 + I2*L1**2*M2\
+                                    + I2*M1*R1**2 + L1**2*M2**2*R2**2*sin_theta2**2 + M1*M2*R1**2*R2**2)**2\
+                                        + (-F1*L1*M2*R2*dtheta1*sin_theta2 + 2*F2*L1*M2*R2*dtheta2\
+                                            *sin_theta2 + 2*L1*M2**2*R2**2*(G*sin_theta1_theta2\
+                                                + L1*dtheta1**2*sin_theta2)*sin_theta2 + L1*M2*R2\
+                                                    *tau1*sin_theta2 - L1*M2*R2*(G*M2*R2*sin_theta1_theta2 + G*(L1*M2 + M1*R1)*sin_theta1 \
+                                                            - L1*M2*R2*dtheta2*(2*dtheta1 + dtheta2)*sin_theta2)\
+                                                                *sin_theta2 - M2*R2*(G*cos_theta1_theta2\
+                                                                    + L1*dtheta1**2*cos_theta2)*(I1 + I2 + L1**2*M2\
+                                                                        + 2*L1*M2*R2*cos_theta2 + M1*R1**2 + M2*R2**2)\
+                                                                            + (G*M2*R2*cos_theta1_theta2 - L1*M2*R2*dtheta2*(2*dtheta1 + dtheta2)\
+                                                                                *cos_theta2)*(I2 + L1*M2*R2*cos_theta2 \
+                                                                                    + M2*R2**2))/(I1*I2 + I1*M2*R2**2 + I2*L1**2*M2 \
+                                                                                        + I2*M1*R1**2 + L1**2*M2**2*R2**2*sin_theta2**2 \
+                                                                                            + M1*M2*R1**2*R2**2)
+    return np.array([[j11, j12, j13, j14], [j21, j22, j23, j24]])
 
 def dynamics(x, u, dt=1e-3):
 
-    theta1 = x[0].item()
-    #print("theta1:",theta1)
-    theta2 = x[1].item()
-    #print("theta2:",theta2)
-    dtheta1 = x[2].item()
+    dtheta1 = x[0].item()
     #print("dtheta1:",dtheta1)
-    dtheta2 = x[3].item()
+    dtheta2 = x[1].item()
     #print("dtheta2:",dtheta2)
+    theta1 = x[2].item()
+    #print("theta1:",theta1)
+    theta2 = x[3].item()
+    #print("theta2:",theta2)
+    
 
     # Compute matrices
     M = compute_inertia_matrix(theta2)
     M_inv = np.linalg.inv(M)
     C = compute_coriolis(theta2, dtheta1, dtheta2)
     G = compute_gravity(theta1, theta2)
+    
+    A = np.block([[ -M_inv @ F, Z_2x2 ], 
+                  [ np.eye(2), Z_2x2 ]])
        
     
     M_inv_ext = np.block([
@@ -101,5 +177,10 @@ def dynamics(x, u, dt=1e-3):
     # print("x4_dot:",x_dot[3])
     
     x_new = x + dt * x_dot
+    
+    # compute jacobi matrix
+    jacobian_x_dot = compute_jacobian(dtheta1, dtheta2, theta1, theta2, u[0].item())
+    
+    # print("jacobian_x_dot:\n", jacobian_x_dot)
     
     return x_new

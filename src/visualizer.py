@@ -3,26 +3,39 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 
-def animation(x_history, L1, L2,FRAME_SKIP=20):
+def animate_double_pendulum(x_history, L1, L2,frame_skip=40):
     """
     Create an animation of a double pendulum.
 
     Parameters:
-        x (numpy.ndarray): Array containing the simulation data with shape (T, 4).
+        x_history (numpy.ndarray): Array containing the simulation data with shape (T, 4).
         L1 (float): Length of the first pendulum rod.
         L2 (float): Length of the second pendulum rod.
+        frame_skip (int): Number of frames to skip in the animation for speed.
     """
-    T = x_history.shape[0]
-    data = np.zeros((T, 4))
+
+    num_frames = x_history.shape[0]
+    num_steps = num_frames // frame_skip
+    
+    positions = np.zeros((num_frames, 4))
 
     # Calculate positions of the pendulum
-    data[:, 0] = L1 * np.sin(x_history[:, 2])  # x1
-    data[:, 1] = -L1 * np.cos(x_history[:, 2])  # y1
-    data[:, 2] = data[:, 0] + L2 * np.sin(x_history[:, 3])  # x2
-    data[:, 3] = data[:, 1] - L2 * np.cos(x_history[:, 3])  # y2
+    positions[:, 0] = L1 * np.sin(x_history[:, 2])  # x1
+    positions[:, 1] = -L1 * np.cos(x_history[:, 2])  # y1
+    positions[:, 2] = positions[:, 0] + L2 * np.sin(x_history[:, 2]+x_history[:, 3])  # x2
+    positions[:, 3] = positions[:, 1] - L2 * np.cos(x_history[:, 2]+x_history[:, 3])  # y2
 
     # Reduce data for animation by skipping frames
-    data = data[::FRAME_SKIP]
+    positions = positions[::frame_skip]
+    
+    # Constants for the animation
+    trace_length1 = 100  # Maximum length of the first hinge trace
+    trace_length2 = 2*trace_length1  # Maximum length of the pendulum trace
+    alpha_min, alpha_max = 0.1, 1  # Fading alpha range
+
+    # Precompute alphas for fading traces
+    alpha_values1 = np.linspace(alpha_min, alpha_max, trace_length1)
+    alpha_values2 = np.linspace(alpha_min, alpha_max, trace_length2)
 
     # Create the plot
     fig, ax = plt.subplots()
@@ -32,29 +45,28 @@ def animation(x_history, L1, L2,FRAME_SKIP=20):
 
     # Plot objects
     line, = ax.plot([], [], 'o-', lw=2)  # Pendulum rods
-    trace1, = ax.plot([], [], 'r.', markersize=2)  # Trace of the first hinge
-    trace2, = ax.plot([], [], 'r.', markersize=2)  # Trace of the pendulum
+    trace1 = ax.scatter([], [], c=[], s=2, cmap='Purples', vmin=0, vmax=1)  # Trace of the first hinge
+    trace2 = ax.scatter([], [], c=[], s=2, cmap='Reds', vmin=0, vmax=1)  # Trace of the pendulum
+
 
     # Lists to store trace points
-    trace_x1, trace_y1, trace_x2, trace_y2 = [], [], [], []
+    trace_x1, trace_y1 = [], [] 
+    trace_x2, trace_y2 = [], []
 
     def init():
-        """
-        Initialize the animation by clearing the data.
-        """
+        """Initialize the animation by clearing the data."""
         line.set_data([], [])
-        trace1.set_data([], [])
-        trace2.set_data([], [])
+        trace1.set_offsets(np.empty((0, 2)))
+        trace2.set_offsets(np.empty((0, 2)))
+        trace_x1.clear()
+        trace_y1.clear()
+        trace_x2.clear()
+        trace_y2.clear()
         return line, trace1, trace2
 
     def update(frame):
-        """
-        Update the animation for the given frame.
-
-        Parameters:
-            frame (int): The index of the current frame.
-        """
-        x1, y1, x2, y2 = data[frame]
+        """Update the animation for the given frame."""
+        x1, y1, x2, y2 = positions[frame]
 
         # Set pendulum line positions
         line.set_data([0, x1, x2], [0, y1, y2])
@@ -66,27 +78,29 @@ def animation(x_history, L1, L2,FRAME_SKIP=20):
         trace_y2.append(y2)
 
         # Limit trace size for better performance
-        if len(trace_x1) >= 100:
+        if len(trace_x1) >= trace_length1:
             trace_x1.pop(0)
             trace_y1.pop(0)
-        if len(trace_x2) >= 1000:
+        if len(trace_x2) >= trace_length2:
             trace_x2.pop(0)
             trace_y2.pop(0)
 
-        # Update trace data
-        trace1.set_data(trace_x1, trace_y1)
-        trace2.set_data(trace_x2, trace_y2)
+        # Update scatter plots
+        trace1.set_offsets(np.c_[trace_x1, trace_y1])
+        trace1.set_array(alpha_values1[-len(trace_x1):])
+
+        trace2.set_offsets(np.c_[trace_x2, trace_y2])
+        trace2.set_array(alpha_values2[-len(trace_x2):])
+
         return line, trace1, trace2
 
-    num_frames = data.shape[0]
-
     # Create the animation
-    ani = FuncAnimation(
+    animation = FuncAnimation(
         fig, update,
-        frames=num_frames,
+        frames=num_steps,
         init_func=init,
         blit=True,
-        interval=1
+        interval=0
     )
 
     plt.show()
